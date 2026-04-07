@@ -234,16 +234,11 @@ def format_comparison_table(results: list[dict]) -> str:
 # Entry point for manual testing
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    prompt_test = "Hãy kể cho tôi một sự thật thú vị về Việt Nam."
-    temperatures = [0.0, 0.5, 1.0, 1.5]
-    
-    print("=== Thử nghiệm độ nhạy của Temperature ===")
-    
-    for t in temperatures:
-        try:
-            # Truyền giá trị t vào tham số temperature của hàm call_openai
-            response, latency = call_openai(prompt=prompt_test, temperature=t)
-            print(f"\n[Temperature = {t}]:\n{response}")
-            print("-" * 50)
-        except Exception as e:
-            print(f"\n[Lỗi khi gọi API với Temperature = {t}]: {e}")
+    test_prompt = "Explain the difference between temperature and top_p in one sentence."
+    print("=== Comparing models ===")
+    result = compare_models(test_prompt)
+    for key, value in result.items():
+        print(f"{key}: {value}")
+
+    print("\n=== Starting chatbot (type 'quit' to exit) ===")
+    streaming_chatbot()
