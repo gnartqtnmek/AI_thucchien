@@ -1,0 +1,201 @@
+{
+  "items": [
+    {
+      "id": "I001",
+      "name_vi": "Gà rán 2 miếng",
+      "category_vi": "Gà rán",
+      "price": 69000,
+      "available": true,
+      "stock": 50,
+      "description_vi": "2 miếng gà rán giòn"
+    },
+    {
+      "id": "I002",
+      "name_vi": "Gà rán 4 miếng",
+      "category_vi": "Gà rán",
+      "price": 129000,
+      "available": true,
+      "stock": 40,
+      "description_vi": "4 miếng gà rán giòn"
+    },
+    {
+      "id": "I003",
+      "name_vi": "Burger gà",
+      "category_vi": "Burger",
+      "price": 45000,
+      "available": true,
+      "stock": 35,
+      "description_vi": "1 bánh burger gà"
+    },
+    {
+      "id": "I004",
+      "name_vi": "Khoai tây chiên",
+      "category_vi": "Món phụ",
+      "price": 30000,
+      "available": true,
+      "stock": 60,
+      "description_vi": "1 phần khoai tây chiên cỡ vừa"
+    },
+    {
+      "id": "I005",
+      "name_vi": "Pepsi",
+      "category_vi": "Nước uống",
+      "price": 15000,
+      "available": true,
+      "stock": 100,
+      "description_vi": "1 lon Pepsi"
+    },
+    {
+      "id": "I006",
+      "name_vi": "Salad bắp cải",
+      "category_vi": "Món phụ",
+      "price": 25000,
+      "available": true,
+      "stock": 30,
+      "description_vi": "1 phần salad bắp cải"
+    },
+    {
+      "id": "I007",
+      "name_vi": "Gà viên 6 miếng",
+      "category_vi": "Ăn vặt",
+      "price": 55000,
+      "available": true,
+      "stock": 45,
+      "description_vi": "6 miếng gà viên"
+    },
+    {
+      "id": "I008",
+      "name_vi": "Bóng phô mai",
+      "category_vi": "Ăn vặt",
+      "price": 39000,
+      "available": false,
+      "stock": 0,
+      "description_vi": "1 phần bóng phô mai"
+    }
+  ],
+  "combos": [
+    {
+      "id": "C001",
+      "name_vi": "Combo Cá nhân",
+      "items": [
+        {
+          "item_id": "I001",
+          "name_vi": "Gà rán 2 miếng",
+          "quantity": 1
+        },
+        {
+          "item_id": "I004",
+          "name_vi": "Khoai tây chiên",
+          "quantity": 1
+        },
+        {
+          "item_id": "I005",
+          "name_vi": "Pepsi",
+          "quantity": 1
+        }
+      ],
+      "original_price": 114000,
+      "combo_price": 99000,
+      "available": true,
+      "serving_size_vi": "1 người"
+    },
+    {
+      "id": "C002",
+      "name_vi": "Combo Cặp đôi",
+      "items": [
+        {
+          "item_id": "I002",
+          "name_vi": "Gà rán 4 miếng",
+          "quantity": 1
+        },
+        {
+          "item_id": "I004",
+          "name_vi": "Khoai tây chiên",
+          "quantity": 2
+        },
+        {
+          "item_id": "I005",
+          "name_vi": "Pepsi",
+          "quantity": 2
+        }
+      ],
+      "original_price": 189000,
+      "combo_price": 159000,
+      "available": true,
+      "serving_size_vi": "2 người"
+    },
+    {
+      "id": "C003",
+      "name_vi": "Combo Gia đình",
+      "items": [
+        {
+          "item_id": "I002",
+          "name_vi": "Gà rán 4 miếng",
+          "quantity": 2
+        },
+        {
+          "item_id": "I004",
+          "name_vi": "Khoai tây chiên",
+          "quantity": 2
+        },
+        {
+          "item_id": "I005",
+          "name_vi": "Pepsi",
+          "quantity": 4
+        },
+        {
+          "item_id": "I007",
+          "name_vi": "Gà viên 6 miếng",
+          "quantity": 1
+        }
+      ],
+      "original_price": 393000,
+      "combo_price": 329000,
+      "available": true,
+      "serving_size_vi": "4 người"
+    }
+  ],
+  "discounts": [
+    {
+      "code": "GA20",
+      "type": "percentage",
+      "value": 20,
+      "min_order_value": 150000,
+      "applicable_to_vi": "Tất cả món",
+      "active": true,
+      "description_vi": "Giảm 20% cho đơn từ 150.000 VND"
+    },
+    {
+      "code": "STUDENT10",
+      "type": "percentage",
+      "value": 10,
+      "min_order_value": 100000,
+      "applicable_to_vi": "Tất cả món",
+      "active": true,
+      "description_vi": "Giảm 10% cho học sinh, sinh viên, áp dụng cho đơn từ 100.000 VND"
+    },
+    {
+      "code": "FREESIDE",
+      "type": "fixed",
+      "value": 30000,
+      "min_order_value": 120000,
+      "applicable_to_vi": "Món phụ",
+      "active": true,
+      "description_vi": "Giảm 30.000 VND cho món phụ"
+    },
+    {
+      "code": "OLD50",
+      "type": "percentage",
+      "value": 50,
+      "min_order_value": 200000,
+      "applicable_to_vi": "Tất cả món",
+      "active": false,
+      "description_vi": "Chương trình đã hết hạn"
+    }
+  ],
+  "best_seller": {
+    "item_id": "I002",
+    "name_vi": "Gà rán 4 miếng",
+    "reason_vi": "Món có số lượng đơn hàng cao nhất trong 30 ngày gần nhất"
+  }
+}
