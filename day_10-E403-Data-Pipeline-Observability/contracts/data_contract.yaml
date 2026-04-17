@@ -1,0 +1,169 @@
+# Data contract — Lab Day 10 (tiếp nối artifact CS + IT Helpdesk)
+# Người phụ trách: Member 1 — Nguyễn Quang Tùng
+
+version: "1.0"
+dataset: "kb_chunk_export"
+owner_team: "Nguyễn Quang Tùng - 2A202600197, Nguyễn Thị Quỳnh Trang - 2A202600406, Đồng Văn Thịnh - 2A202600365, Đặng Văn Minh - 2A202600027"
+
+# ─── SLA & Freshness ────────────────────────────────────────────────────────
+freshness:
+  measured_at: "publish"        # ingest | cleaned | publish
+  sla_hours: 124                 # Đọc từ env FRESHNESS_SLA_HOURS nếu muốn override
+  alert_channel: "team-data-alerts"
+  note: >
+    SLA áp dụng cho thời điểm publish (sau embed). Nếu exported_at của batch
+    cũ hơn sla_hours so với run_timestamp thì freshness_check = FAIL.
+    Nhóm có thể set FRESHNESS_SLA_HOURS=48 trong .env khi chạy demo Sprint 3.
+
+# ─── Nguồn dữ liệu canonical ────────────────────────────────────────────────
+canonical_sources:
+  - path: "data/docs/policy_refund_v4.txt"
+    doc_id: "policy_refund_v4"
+    description: "Chính sách hoàn tiền phiên bản 4 — cửa sổ hoàn tiền 7 ngày làm việc"
+    ingest_method: "CSV export từ hệ thống nội bộ"
+    failure_mode: "Chunk lẫn nội dung policy-v3 cũ (14 ngày) do lỗi migration"
+    alert_metric: "quarantine_records tăng khi rule no_stale_refund_window kích hoạt"
+
+  - path: "data/docs/sla_p1_2026.txt"
+    doc_id: "sla_p1_2026"
+    description: "SLA ticket P1 năm 2026 — phản hồi 15 phút, resolution 4 giờ"
+    ingest_method: "CSV export từ hệ thống nội bộ"
+    failure_mode: "Thiếu effective_date hoặc ngày không đúng năm 2026"
+    alert_metric: "quarantine_records tăng khi rule invalid_date kích hoạt"
+
+  - path: "data/docs/it_helpdesk_faq.txt"
+    doc_id: "it_helpdesk_faq"
+    description: "FAQ IT Helpdesk — khóa tài khoản, đổi mật khẩu, self-service portal"
+    ingest_method: "CSV export từ hệ thống nội bộ"
+    failure_mode: "effective_date sai định dạng (DD/MM/YYYY thay vì YYYY-MM-DD)"
+    alert_metric: "quarantine_records tăng khi rule date_format_normalize kích hoạt"
+
+  - path: "data/docs/hr_leave_policy.txt"
+    doc_id: "hr_leave_policy"
+    description: "Chính sách nghỉ phép HR — phiên bản 2026 (12 ngày cho nhân viên < 3 năm)"
+    ingest_method: "CSV export từ hệ thống nội bộ"
+    failure_mode: "Xung đột version: bản HR 2025 (10 ngày) lẫn với bản 2026 (12 ngày)"
+    alert_metric: "quarantine_records tăng khi rule hr_leave_version kích hoạt"
+
+  - path: "data/docs/access_control_sop.txt"
+    doc_id: "access_control_sop"
+    description: "SOP kiểm soát truy cập hệ thống"
+    ingest_method: "CSV export từ hệ thống nội bộ"
+    failure_mode: "Chunk rỗng hoặc thiếu metadata"
+    alert_metric: "quarantine_records tăng khi rule empty_chunk kích hoạt"
+
+# ─── Allowlist doc_id hợp lệ ────────────────────────────────────────────────
+allowed_doc_ids:
+  - policy_refund_v4
+  - sla_p1_2026
+  - it_helpdesk_faq
+  - hr_leave_policy
+  - access_control_sop
+
+# ─── Schema cleaned ─────────────────────────────────────────────────────────
+schema_cleaned:
+  chunk_id:
+    type: string
+    required: true
+    description: "ID ổn định sau clean — dùng để upsert idempotent vào Chroma"
+    constraints:
+      unique: true
+      non_empty: true
+
+  doc_id:
+    type: string
+    required: true
+    description: "Khóa logic tài liệu nguồn — phải thuộc allowed_doc_ids"
+    constraints:
+      allowlist: "xem allowed_doc_ids"
+
+  chunk_text:
+    type: string
+    required: true
+    description: "Nội dung chunk sau khi làm sạch"
+    constraints:
+      min_length: 10
+      max_length: 5000
+      non_empty: true
+
+  effective_date:
+    type: date
+    required: true
+    description: "Ngày hiệu lực của tài liệu — định dạng ISO 8601 (YYYY-MM-DD)"
+    constraints:
+      format: "YYYY-MM-DD"
+      min: "2024-01-01"
+      max: "2027-12-31"
+
+  exported_at:
+    type: datetime
+    required: true
+    description: "Thời điểm export từ hệ thống nguồn — định dạng ISO 8601"
+    constraints:
+      format: "YYYY-MM-DDTHH:MM:SS"
+
+# ─── Failure modes & Quarantine rules ───────────────────────────────────────
+failure_modes:
+  - id: "duplicate_chunk"
+    description: "Hai dòng có chunk_text giống nhau (sau strip) trong cùng một batch"
+    example: "chunk_id 1 và 2 trong policy_export_dirty.csv"
+    action: "quarantine"
+    severity: "warn"
+
+  - id: "empty_chunk"
+    description: "chunk_text rỗng hoặc chỉ chứa khoảng trắng"
+    example: "chunk_id 5 — chunk_text = empty string"
+    action: "quarantine"
+    severity: "halt"
+
+  - id: "invalid_doc_id"
+    description: "doc_id không thuộc allowed_doc_ids"
+    example: "chunk_id 9 — doc_id = legacy_catalog_xyz_zzz"
+    action: "quarantine"
+    severity: "halt"
+
+  - id: "stale_refund_window"
+    description: "chunk_text chứa '14 ngày' trong context hoàn tiền — lệch với policy v4 (7 ngày)"
+    example: "chunk_id 3 — nội dung từ policy-v3 lẫn vào"
+    action: "fix_or_quarantine"
+    severity: "halt"
+
+  - id: "hr_leave_version_conflict"
+    description: "Chunk HR leave policy có effective_date trước hr_leave_min_effective_date"
+    example: "chunk_id 7 — effective_date = 2025-01-01 (bản cũ 10 ngày phép)"
+    action: "quarantine"
+    severity: "warn"
+
+  - id: "invalid_date_format"
+    description: "effective_date không đúng định dạng ISO 8601 (YYYY-MM-DD)"
+    example: "chunk_id 10 — effective_date = 01/02/2026"
+    action: "normalize"
+    severity: "warn"
+
+# ─── Quality rules (đồng bộ với quality/expectations.py) ────────────────────
+quality_rules:
+  - id: "no_duplicate_chunk_text"
+    description: "Không có hai chunk có chunk_text giống nhau sau khi strip"
+    severity: "warn"
+
+  - id: "no_stale_refund_window"
+    description: "Không được để chunk policy refund chứa cửa sổ 14 ngày (v4 = 7 ngày)"
+    severity: "halt"
+
+  - id: "no_empty_chunk_text"
+    description: "Tất cả chunk_text phải có độ dài >= 10 ký tự"
+    severity: "halt"
+
+  - id: "all_doc_ids_in_allowlist"
+    description: "Tất cả doc_id phải thuộc allowed_doc_ids"
+    severity: "halt"
+
+  - id: "effective_date_in_valid_range"
+    description: "effective_date phải trong khoảng 2024-01-01 đến 2027-12-31"
+    severity: "warn"
+
+# ─── Policy versioning (tránh hard-code trong code) ─────────────────────────
+policy_versioning:
+  hr_leave_min_effective_date: "2026-01-01"   # Đọc từ env HR_LEAVE_MIN_DATE nếu cần override
+  refund_window_days: 7                        # Cửa sổ hoàn tiền đúng theo policy_refund_v4
+  refund_stale_window_days: 14                 # Giá trị cũ (v3) — dùng để detect lỗi migration
